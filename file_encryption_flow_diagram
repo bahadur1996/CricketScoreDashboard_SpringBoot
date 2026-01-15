@@ -1,0 +1,16 @@
+```mermaid
+flowchart TB
+    A[Client Applications] -->|Upload Audio| B[S3 Bucket]
+    A -->|Upload Audio| C[GCS Bucket]
+
+    B -->|S3 Event / EventBridge<br/>Lambda Trigger| D[Encryption Service]
+    C -->|GCS Notification<br/>Cloud Function / Pub-Sub| D[Encryption Service]
+
+    D -->|Upload Encrypted Audio| E[Encrypted S3 Bucket]
+    D -->|Upload Encrypted Audio| F[Encrypted GCS Bucket]
+
+    D -->|Delete Raw Audio| G[S3 Lambda Cleanup]
+    D -->|Delete Raw Audio| H[GCS Cloud Function Cleanup]
+
+    G -->|Destroy| B
+    H -->|Destroy| C
