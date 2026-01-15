@@ -1,16 +1,49 @@
+# Bucket-based File Encryption Flow Diagram
+## 1. Flow-Diagram
 ```mermaid
-flowchart LR
-    A[Client Applications] -->|Upload Audio| B[S3 Bucket]
-    A -->|Upload Audio| C[GCS Bucket]
+flowchart TB
 
-    B -->|S3 Event / EventBridge<br/>Lambda Trigger| D[Encryption Service]
-    C -->|GCS Notification<br/>Cloud Function / Pub-Sub| D[Encryption Service]
+    %% =======================
+    %% Client Layer
+    %% =======================
+    subgraph Clients
+        Agent[Call Handler Agent]
+    end
 
-    D -->|Upload Encrypted Audio| E[Encrypted S3 Bucket]
-    D -->|Upload Encrypted Audio| F[Encrypted GCS Bucket]
+    %% =======================
+    %% Object Storage
+    %% =======================
+    subgraph Cloud_Storage["Cloud Object Storage"]
+        AWS[S3 Bucket]
+        GCP[GCS Bucket]
+    end
 
-    D -->|Delete Raw Audio| G[S3 Lambda Cleanup]
-    D -->|Delete Raw Audio| H[GCS Cloud Function Cleanup]
+    %% =======================
+    %% Encryption Service
+    %% =======================
+    subgraph Encryption_Service["Encryption Service"]
+        ES[Encrypt & Upload]
+    end
 
-    G -->|Destroy| B
-    H -->|Destroy| C
+    %% =======================
+    %% Raw Data Cleanup
+    %% =======================
+    subgraph Cleanup["Raw Audio Cleanup"]
+        AWSC[S3 Lambda Cleanup]
+        GCPC[GCS Cloud Function Cleanup]
+    end
+
+    %% =======================
+    %% Flow
+    %% =======================
+    Agent -->|Upload Raw Audio| AWS
+    Agent -->|Upload Raw Audio| GCP
+
+    AWS -->|S3 Event / EventBridge| ES
+    GCP -->|GCS Notification / Pub-Sub| ES
+
+    ES -->|Upload Encrypted Audio| AWS
+    ES -->|Upload Encrypted Audio| GCP
+
+    AWS -->|Post-Encryption Trigger| AWSC
+    GCP -->|Post-Encryption Trigger| GCPC
