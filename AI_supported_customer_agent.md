@@ -25,7 +25,7 @@ This document describes the end-to-end call flow for an AI-supported customer ag
 ## Architecture diagram
 
 ```mermaid
-flowchart LR
+flowchart TD
 
     %% =========================
     %% User Layer
